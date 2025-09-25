@@ -1,0 +1,67 @@
+name: Daily Profile Update (Safe)
+
+on:
+  schedule:
+    - cron: '40 18 * * *'   # Runs daily at 00:10 IST (18:40 UTC previous day)
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Update README
+        run: |
+          set -e
+          README=README.md
+          TMP="$README.tmp"
+
+          TIMESTAMP="$(date -u '+%Y-%m-%d %H:%M UTC')"
+
+          QUOTES=(
+            "Keep learning ✨"
+            "Solve one problem a day."
+            "Practice > Perfection."
+            "Read, implement, repeat."
+            "Small steps every day."
+          )
+
+          RAND_INDEX=$((RANDOM % ${#QUOTES[@]}))
+          DAILY_NOTE="${QUOTES[$RAND_INDEX]}"
+
+          awk 'BEGIN{in=1}
+               /<!--PROFILE_START-->/{print; in=0; next}
+               /<!--PROFILE_END-->/{in=1; print; next}
+               { if(in==1) print }' "$README" > "$TMP" || true
+
+          cat >> "$TMP" <<EOF
+<!--PROFILE_START-->
+*Last refresh:* $TIMESTAMP  
+*Daily note:* $DAILY_NOTE
+<!--PROFILE_END-->
+EOF
+
+          if ! cmp -s "$README" "$TMP"; then
+            mv "$TMP" "$README"
+            git add "$README"
+            git commit -m "chore: daily profile update — $TIMESTAMP" || true
+            git push
+            echo "updated"
+          else
+            echo "no changes to commit"
+            rm -f "$TMP"
+          fi
