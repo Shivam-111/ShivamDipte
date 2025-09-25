@@ -2,7 +2,7 @@
 
 This is my GitHub profile README.
 
-- 🔭 Working on: Learning DSA & Android
+- 🔭 Working on: Learning DSA & Web Developement
 - 🎯 Goal: Finish engineering & get a good job in 3 years
 
 <!--PROFILE_START-->
